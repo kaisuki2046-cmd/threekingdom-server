@@ -17,7 +17,7 @@ const api = new OpenApi({
   envId: env.DY_ENV_ID ?? ''
 });
 
-const app = createApp({ api, pushSecret: env.PUSH_SECRET || undefined, giftMap: { ...DEFAULT_GIFT_MAP, ...(env.GIFT_MAP ? JSON.parse(env.GIFT_MAP) : {}) } });
+const app = createApp({ api, pushSecret: env.PUSH_SECRET || undefined, pollProbe: env.POLL_PROBE === '1', pollWaitMs: env.POLL_WAIT_MS ? Number(env.POLL_WAIT_MS) : undefined,giftMap: { ...DEFAULT_GIFT_MAP, ...(env.GIFT_MAP ? JSON.parse(env.GIFT_MAP) : {}) } });
 if (!env.PUSH_SECRET) console.warn('未设置 PUSH_SECRET，推送签名不校验（仅限本地调试）');
 
 const port = Number(env.PORT ?? 8000);

@@ -40,6 +40,8 @@ export interface AppDeps {
   giftMap: Record<string, GiftKind>;
   /** 长轮询最长挂起时间。 */
   pollWaitMs?: number;
+  /** dev 探测开关（环境变量 POLL_PROBE=1）。 */
+  pollProbe?: boolean;
   log?: (msg: string) => void;
   now?: () => number;
 }
@@ -183,6 +185,11 @@ export function createApp(deps: AppDeps) {
 
   /** 长轮询：先处理回报，有暂存消息立即返回，否则挂起到有新消息或超时。 */
   async function poll(req: IncomingMessage, body: any): Promise<{ packets: LivePacket[] }> {
+    // 仅 dev 探测网关能挂起多久：POLL_PROBE=1 时 roomId=__probe__ 只等待后返回空，不涉及任何房间数据。
+    if (deps.pollProbe && body?.roomId === '__probe__') {
+      await new Promise((r) => setTimeout(r, Math.min(Math.max(0, Number(body.waitMs) || 0), 60_000)));
+      return { packets: [] };
+    }
     const room = auth(body?.roomId, body?.clientKey);
     room.lastSeenAt = now();
     room.disconnectedAt = null;
