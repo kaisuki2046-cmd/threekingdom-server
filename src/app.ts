@@ -118,7 +118,8 @@ export function createApp(deps: AppDeps) {
   async function liveCallback(req: IncomingMessage, raw: string) {
     const h: Record<string, string | undefined> = {};
     for (const k of ['x-signature', 'x-nonce-str', 'x-timestamp', 'x-roomid', 'x-msg-type']) h[k] = header(req, k);
-    if (deps.pushSecret && !verifyPush(h, raw, deps.pushSecret)) throw new HttpError(401, '签名校验失败');
+    // 走抖音云内网专线的推送不带签名（该路径只允许内网调用，切勿在访问控制里对外开放）；带签名的（直推开发者服务器）才校验。
+    if (h['x-signature'] !== undefined && deps.pushSecret && !verifyPush(h, raw, deps.pushSecret)) throw new HttpError(401, '签名校验失败');
     const msgType = h['x-msg-type'] as MsgType;
     if (!MSG_TYPES.includes(msgType)) return { ignored: `msg_type ${msgType}` };
     const roomId = String(h['x-roomid'] ?? '');
