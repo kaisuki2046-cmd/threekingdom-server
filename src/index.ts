@@ -21,4 +21,6 @@ const app = createApp({ api, pushSecret: env.PUSH_SECRET || undefined, giftMap: 
 if (!env.PUSH_SECRET) console.warn('未设置 PUSH_SECRET，推送签名不校验（仅限本地调试）');
 
 const port = Number(env.PORT ?? 8000);
-createServer((req, res) => void app.handle(req, res)).listen(port, () => console.log(`三国闹西游中间层已启动 :${port}`));
+const server = createServer((req, res) => void app.handle(req, res));
+server.on('upgrade', (req, socket) => app.handleUpgrade(req, socket));
+server.listen(port, () => console.log(`三国闹西游中间层已启动 :${port}`));
